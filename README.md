@@ -5,6 +5,8 @@ Names:
 Stacey Butler
 Michael Livesay
 Robert Rennie
+Sarka Petrickova
+Mary Angelica Tursi
 
 Ideas:
 Genotype/phenotype correlation analysis
