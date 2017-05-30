@@ -18,6 +18,6 @@ height vs time, genotype, stock spacing
 
 Algorithms:
 Spectral clustering methods
-Lotka-Volterra equations
+Gilpin-Ayala equations
 python mapper
 persistant homology
