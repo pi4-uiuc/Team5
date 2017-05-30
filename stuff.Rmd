@@ -1,0 +1,97 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+
+## Load data 
+
+```{r load-data, message = FALSE}
+salix <- read_csv('salix.csv')
+```
+```{r load-data-loop, message = FALSE}
+all_genera <- list()
+for (genus in c('panicum', 'miscanthus','populus','salix')){ all_genera[[genus]] <- read_csv(paste0(genus,'.csv'))
+all_genera[[genus]]$mean <- as.numeric(all_genera[[genus]]$mean)
+}
+
+all_genera_df <- dplyr::bind_rows(all_genera)
+```
+
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+```{r}
+2+5
+```
+
+## Load Sorghum data from terraref.ncsa.illinois.edu/bety
+```{r db-connection}
+library(RPostgreSQL)
+dbcon <- dbConnect(RPostgreSQL::PostgreSQL(),
+                   dbname = "bety",
+                   password = 'bety',
+                   host = 'terra-bety.default',
+                   user='bety',
+                   port =5432)
+```
+
+```{sql basic-query, connection = dbcon}
+
+select variables.name, mean 
+  from traits join variables
+  on traits.variable_id = variables.id 
+  limit 10
+
+```
+
+```{sql trait-counts, connection  = dbcon}
+select variables.name,count(*) as n
+from traits join variables
+on traits.variable_id = variables.id
+group by variables.name
+order by n desc;
+```
+
+
+```{r}
+library(dplyr)
+
+bety_src <- src_postgres( dbname = "bety",
+                   password = 'bety',
+                   host = 'terra-bety.default',
+                   user='bety',
+                   port =5432)
+
+traits <- tbl(bety_src, 'traits')
+
+variables <- tbl(bety_src, 'variables') %>%
+  mutate(variable_id = id)
+
+traits_variables <- traits %>% left_join(variables, by = 'variable_id') %>%
+  select(name,mean)
+  collect
+
+head(traits_variables)
+dim(traits_variables %>% collect)
+
+traitsview <- tbl(bety_src, 'traits', 'traits_and_yields_view')
+```
+
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+
