@@ -21,3 +21,9 @@ Spectral clustering methods
 Lotka-Volterra equations
 python mapper
 persistant homology
+
+Data: 
+
+```r
+file.copy(from = "/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf", to = '~/Team5/Data/')
+```
