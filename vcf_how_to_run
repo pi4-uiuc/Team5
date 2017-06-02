@@ -1,3 +1,4 @@
 install.packages("vcfR")
 library(vcfR)
-allData=read.vcfR(file="/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf"")
+allData <-read.vcfR(file="/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf"")
+tidy1<-vcfR2tidy(allData[,1])
