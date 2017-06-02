@@ -1,29 +1,31 @@
 # Team5
-Team5
 
-Names:
-Stacey Butler
-Michael Livesay
-Robert Rennie
-Sarka Petrickova
-Mary Angelica Tursi
+### Names:
 
-Ideas:
-Genotype/phenotype correlation analysis
-Topological data analysis
-Competitive dynamical models based on stock spacing
+* Stacey Butler
+* Michael Livesay
+* Robert Rennie
+* Sarka Petrickova
+* Mary Angelica Tursi
 
-Types:
-height vs time, genotype, stock spacing
+### Ideas:
 
-Algorithms:
-Spectral clustering methods
-Gilpin-Ayala equations
-python mapper
-persistant homology
+* Genotype/phenotype correlation analysis
+* Topological data analysis
+* Competitive dynamical models based on stock spacing
 
-Data: 
+### Types:
 
+* height vs time, genotype, stock spacing
+
+### Algorithms:
+
+* Spectral clustering methods
+* Gilpin-Ayala equations
+* python mapper
+* persistant homology
+
+### Data: 
 ```r
 file.copy(from = "/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf", to = '~/Team5/Data/')
 ```
