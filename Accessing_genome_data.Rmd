@@ -32,12 +32,43 @@ meta_file = genome_table@meta
 meta_file
 ```
 
-To access a single genome (there are 304), access a column of the gt file (genome data starts at column 2). The genome is presented in the a|b format, where $a,b \in \{ 0,1 \}$.  The way to read this is comparing to the reference.  The reference gives you the column of reference or dominant alleles, but also a table of the alternate.  a sequence with 0|0 means that the entry has the dominant on both sides of the Helix, 0|1 and 1|0 means a dominant on one side, alternate on the other, and 1|1 means alterante alleles on both sides. To get the genome keys, simply take the 0th row. This gives you the "format" key, the rest of the keys, and then the "reference genome".
+To access a single genome (there are 304), access a column of the gt file (genome data starts at column 2). The genome is presented in the a|b format, where $a,b \in \{ 0,1 \}$.  The way to read this is comparing to the reference.  The reference gives you the column of reference or dominant alleles, but also a table of the alternate.  a sequence with 0|0 means that the entry has the dominant on both sides of the Helix, 0|1 and 1|0 means a dominant on one side, alternate on the other, and 1|1 means alterante alleles on both sides. To get the genome keys, simply take the 0th row. This gives you the "format" key, the rest of the keys, and then the "reference genome".  You can also access genomes with specific keys:
 
 ```{r}
-table1 = gt_file[,2]
-key_names = gt_file[0,]
+table1 = gt_file[,2] #access a single genome, pick numbers between 2 and 305
+key_names = gt_file[0,] # access the names of the file as a matrix
+attr(gt_file,"dimnames") # access the names of files as a list of character strings
+PI_tables=gt_file[,startsWith(colnames(gt_file),"PI")] # creates a table of genomes whose IDs begin with PI
 
 ```
+
+Let's now establish a distance function.  We want to se how genomic distance correlates with different phenomic traits.  Start with with Hamming Distance: 
+
+```{r}
+hamming <- function(x,y) {
+  if(length(x)!=length(y)){
+    print('error, vectors not same size!')
+  }else{
+    result <- length(x[x!=y])
+    
+    return(result)
+  }
+}
+
+hamming(gt_file[,3],gt_file[,10])
+
+hamming_mag <- function(x) {
+  result <- length(x[x!="0|0"])
+  return(result)
+}
+
+hamming_mag(gt_file[,10])
+```
+
+
+
+
+
+
 
 
