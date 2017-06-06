@@ -7,10 +7,15 @@ output:
 
 reading a vcf file: 
 
+```{bash}
+pwd
+```
+
+
 ```{r}
 library(vcfR)
 
-genome_table=read.vcfR('imp_TERRA_RIL_SNP.vcf')
+genome_table <- read.vcfR('imp_TERRA_RIL_SNP.vcf')
 ```
 
  accessing the fix, meta, and gt files: 
@@ -61,14 +66,60 @@ hamming_mag <- function(x) {
   result <- length(x[x!="0|0"])
   return(result)
 }
+distances <- vector()
+for (i in 2:305){
+  distances[i-1] <-hamming_mag(gt_file[,i])
+}
+hist(distances,breaks = 20)
+plot(1:304,distances)
+hamming_mag(gt_file[,2])
+min(distances)
+max(distances)
 
-hamming_mag(gt_file[,10])
+order(distances)
+```
+Now Let's do something a bit more involved.  We know that 00 differs from 01 in a way distinct from 11, so let's record that. Let's say that |00-01| and |00-10| = 1, and |00-11| = 2, while 01 and 10 are considered the same, hence |01-10| is 0. From there, we can define the following distances: 
+
+```{r}
+#The following is an allele distance table which will define allele differences
+names <-c('0|0','0|1','1|0','1|1')
+allele_dif_table <- matrix(c(0,1,1,2,1,0,0,1,1,0,0,1,2,1,1,0),
+                           nrow = 4,ncol = 4, dimnames = list(names, names))
+
+#cityblock distance: to get a cityblock magnitude, set a2 to '0|0'.  This is similar to the l_1 distance of a vector
+cityblock<- function(a1,a2){
+  allele_dist <- 0
+  
+  # This is for finding the cityblock magnitude, might define differently since the function takes a while to run
+  if (a2 =='0|0'){
+    for (i in 1:length(a1)){
+      allele_dist<- allele_dist + allele_dif_table[a1[i],'0|0']
+    }
+    
+  # This is for an arbitrary cityblock distance
+  }else {
+    for (i in 1:length(a1)) {
+      allele_dist<- allele_dist + allele_dif_table[a1[i],a2[i]]
+    }
+  }
+  
+  return(allele_dist)
+}
+
+city_distances <- vector()
+for (i in 2:305){
+  city_distances[i-1] <-cityblock(gt_file[,i],'0|0')
+  i
+}
+
+hist(city_distances,breaks = 25)
+plot(1:304,city_distances)
 ```
 
+```{r}
+city_distances<-matrix(city_distances)
 
-
-
-
+```
 
 
 
