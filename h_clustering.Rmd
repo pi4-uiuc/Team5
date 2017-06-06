@@ -1,0 +1,107 @@
+---
+title: "Untitled"
+author: "Stacey Butler"
+date: "6/6/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+install.packages("combinat")
+install.packages("maptree")
+install.packages("e1071")
+
+library(combinat)
+library(maptree)
+library(e1071)
+
+```
+```{r}
+install.packages("vcfR")
+library(vcfR)
+```
+```{r}
+vcf_data <- read.vcfR(file="/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf")
+vcf_gt = vcf_data@gt
+cf_gt_match <- vcf_gt[,286:304]
+
+View(vcf_gt_match)
+```
+
+
+
+```{r}
+##########
+# mary a's code
+##########
+
+
+names <-c('0|0','0|1','1|0','1|1')
+allele_dif_table <- matrix(c(0,1,1,2,1,0,0,1,1,0,0,1,2,1,1,0),
+                           nrow = 4,ncol = 4, dimnames = list(names, names))
+#cityblock distance: to get a cityblock magnitude, set a2 to '0|0'.  This is similar to the l_1 distance of a vector
+cityblock<- function(a1,a2){
+  
+  vec1<-a1[]
+  vec2<-a2[]
+  vec1[a1=='0|0']<-0
+  vec2[a2=='0|0']<-0
+  vec1[a1=='1|1']<-2
+  vec2[a2=='1|1']<-2
+  vec1[a1=='0|1' | a1 == '1|0']<-1
+  vec2[a2=='0|1' | a2 == '1|0']<-1
+  
+ dif<- sum(abs(as.numeric(vec2)-as.numeric(vec1)))
+}
+
+#cityblock(gt_file[,2],gt_file[,3])
+
+#city_distances <- vector()
+# for (i in 2:305){
+#   city_distances[i-1] <-cityblock(gt_file[,i],'0|0')
+#   i
+# }
+
+#hist(city_distances,breaks = 25)
+```
+```{r}
+
+for(i in 1:19){
+  for(j in (i+1):19){
+    d_matrix <- cityblock(vcf_gt_match[i],vcf_gt_match[j])
+  }
+}
+
+
+```
+
+
+```{r}
+
+# d_matrix <- matrix()
+
+cl_tree <- hclust(d_matrix)
+
+plot(cl_tree)
+
+## Cut the tree to the level of 7 branches
+## Each object (gene) is assigned to one of the 7 clusters
+clusters <- cutree(cl_tree,k=7)
+
+## Count the number of genes per cluster
+table(clusters)
+
+
+## Another library, maptree, contains the method clip.clust(), which allows to plot the main branches of the tree.
+
+pr <- clip.clust(cl_tree,k=7)
+plot(pr, main=paste("pruned tree, k=7"))
+
+```
+
+```{r}
+
+```
+
