@@ -19,7 +19,7 @@ library(e1071)
 
 ```
 ```{r}
-install.packages("vcfR")
+#install.packages("vcfR")
 library(vcfR)
 ```
 ```{r}
@@ -66,17 +66,23 @@ cityblock<- function(a1,a2){
 
 #hist(city_distances,breaks = 25)
 ```
-```{r}
 
+
+```{r}
+# should get dimensions more generally
+
+d_matrix <- matrix(,nrow=19,ncol=19)
 for(i in 1:19){
-  for(j in (i+1):19){
-    d_matrix <- cityblock(vcf_gt_match[i],vcf_gt_match[j])
+  for(j in 1:19){
+    d_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
   }
 }
 
+View(d_matrix)
 
 ```
 
+## not yet run/tested stuff
 
 ```{r}
 
