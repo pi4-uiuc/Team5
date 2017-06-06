@@ -88,23 +88,20 @@ allele_dif_table <- matrix(c(0,1,1,2,1,0,0,1,1,0,0,1,2,1,1,0),
 
 #cityblock distance: to get a cityblock magnitude, set a2 to '0|0'.  This is similar to the l_1 distance of a vector
 cityblock<- function(a1,a2){
-  allele_dist <- 0
   
-  # This is for finding the cityblock magnitude, might define differently since the function takes a while to run
-  if (a2 =='0|0'){
-    for (i in 1:length(a1)){
-      allele_dist<- allele_dist + allele_dif_table[a1[i],'0|0']
-    }
-    
-  # This is for an arbitrary cityblock distance
-  }else {
-    for (i in 1:length(a1)) {
-      allele_dist<- allele_dist + allele_dif_table[a1[i],a2[i]]
-    }
-  }
+  vec1<-a1[]
+  vec2<-a2[]
+  vec1[a1=='0|0']<-0
+  vec2[a2=='0|0']<-0
+  vec1[a1=='1|1']<-2
+  vec2[a2=='1|1']<-2
+  vec1[a1=='0|1' | a1 == '1|0']<-1
+  vec2[a2=='0|1' | a2 == '1|0']<-1
   
-  return(allele_dist)
+ dif<- sum(abs(as.numeric(vec2)-as.numeric(vec1)))
 }
+
+cityblock(gt_file[,2],gt_file[,3])
 
 city_distances <- vector()
 for (i in 2:305){
@@ -115,9 +112,18 @@ for (i in 2:305){
 hist(city_distances,breaks = 25)
 plot(1:304,city_distances)
 ```
-
+Now we have more than one kind of distance and set of magnitudes.   Let's set up a table of the different kinds of tables:
 ```{r}
-city_distances<-matrix(city_distances)
+distance_table <- matrix(c(distances,city_distances),nrow = 304, ncol = 2)
+rownames(distance_table)<- colnames(gt_file)[2:305]
+colnames(distance_table)<- c('hamming','cityblock')
+distance_table
+
+a<-1:20
+a[a>10]<-1
+a
+```
+
 
 ```
 
