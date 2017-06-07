@@ -25,7 +25,7 @@ library(vcfR)
 ```{r}
 vcf_data <- read.vcfR(file="/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf")
 vcf_gt = vcf_data@gt
-cf_gt_match <- vcf_gt[,286:304]
+vcf_gt_match <- vcf_gt[,286:304]
 
 View(vcf_gt_match)
 ```
@@ -88,7 +88,7 @@ View(d_matrix)
 
 # d_matrix <- matrix()
 
-cl_tree <- hclust(d_matrix)
+cl_tree <- hclust(as.dist(d_matrix))
 
 plot(cl_tree)
 
@@ -102,8 +102,8 @@ table(clusters)
 
 ## Another library, maptree, contains the method clip.clust(), which allows to plot the main branches of the tree.
 
-pr <- clip.clust(cl_tree,k=7)
-plot(pr, main=paste("pruned tree, k=7"))
+#pr <- clip.clust(cl_tree,k=7)
+#plot(pr, main=paste("pruned tree, k=7"))
 
 ```
 
