@@ -44,6 +44,7 @@ table1 = gt_file[,2] #access a single genome, pick numbers between 2 and 305
 key_names = gt_file[0,] # access the names of the file as a matrix
 attr(gt_file,"dimnames") # access the names of files as a list of character strings
 PI_tables=gt_file[,startsWith(colnames(gt_file),"PI")] # creates a table of genomes whose IDs begin with PI
+key_names
 
 ```
 
@@ -160,9 +161,44 @@ n[2,]<-c(2,0)
 n[3,]<-c(0,-1)
 print((m-n)[1:2,])
 sum(abs(m-n))
+5%%2
 ```
 
+```{r}
+hd_matrix <- matrix(,nrow=304,ncol=304)
+for(i in 1:304){
+  for(j in i:304){
+    hd_matrix[i,j] <- hamming(gt_file[,i+1],gt_file[,j+1])
+    hd_matrix[j,i] <- hd_matrix[i,j]
+  }
+  if (i%%50 == 0) print(i)
+}
+
 ```
 
 
+```{r}
+#hd_matrix <- matrix()
+
+cl_tree <- hclust(as.dist(hd_matrix))
+
+plot(cl_tree)
+```
+
+
+```{r}
+cd_matrix <- matrix(,nrow=304,ncol=304)
+for(i in 1:304){
+  for(j in i:304){
+    cd_matrix[i,j] <- cityblock(gt_file[,i+1],gt_file[,j+1])
+    cd_matrix[j,i] <- cd_matrix[i,j]
+  }
+  if (i%%50 == 0) print(i)
+}
+
+cl_tree <- hclust(as.dist(cd_matrix))
+
+plot(cl_tree)
+
+```
 
