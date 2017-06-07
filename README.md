@@ -48,19 +48,4 @@ tar -xvf genesys-dataset-bd6e6ee9-7919-11e3-9d0a-5254001a6979.zip
 
 
 
-******
-
--Mike
-  I am building a correlation matrix for over between the "Passport Data Completeness Index" and the various variables given below, for each "Accession Number".
-Example:
-Accession Number: PI 533774
-PDCI: 7.8/10
-Variables:
-  Crude protein percentage
-  12-hour in vitro Dry Matter Digestibility
-  Absence or presence of Sorghum Yellow Banding Virus
-  Starch percentage
-  Average Seedling vigor 
-  Net Energy for lactation (cattle) epxressed in Mcal/cwt
-  Aluminum toxicity tolerance
 
