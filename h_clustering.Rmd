@@ -19,13 +19,13 @@ library(e1071)
 
 ```
 ```{r}
-#install.packages("vcfR")
+install.packages("vcfR")
 library(vcfR)
 ```
 ```{r}
 vcf_data <- read.vcfR(file="/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf")
 vcf_gt = vcf_data@gt
-cf_gt_match <- vcf_gt[,286:304]
+vcf_gt_match <- vcf_gt[,286:304]
 
 View(vcf_gt_match)
 ```
@@ -73,7 +73,7 @@ cityblock<- function(a1,a2){
 
 d_matrix <- matrix(,nrow=19,ncol=19)
 for(i in 1:19){
-  for(j in 1:19){
+  for(j in 1:i-1){
     d_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
   }
 }
@@ -83,12 +83,15 @@ View(d_matrix)
 ```
 
 ## not yet run/tested stuff
+```{r}
+help("dist")
+```
 
 ```{r}
 
 # d_matrix <- matrix()
 
-cl_tree <- hclust(d_matrix)
+cl_tree <- hclust(as.dist(d_matrix))
 
 plot(cl_tree)
 
