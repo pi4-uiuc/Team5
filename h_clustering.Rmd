@@ -19,7 +19,7 @@ library(e1071)
 
 ```
 ```{r}
-#install.packages("vcfR")
+install.packages("vcfR")
 library(vcfR)
 ```
 ```{r}
@@ -73,7 +73,7 @@ cityblock<- function(a1,a2){
 
 d_matrix <- matrix(,nrow=19,ncol=19)
 for(i in 1:19){
-  for(j in 1:19){
+  for(j in 1:i-1){
     d_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
   }
 }
@@ -83,6 +83,9 @@ View(d_matrix)
 ```
 
 ## not yet run/tested stuff
+```{r}
+help("dist")
+```
 
 ```{r}
 

@@ -182,7 +182,15 @@ for(i in 1:304){
 
 cl_tree <- hclust(as.dist(hd_matrix))
 
-plot(cl_tree)
+plot(cl_tree,main='Hamming Distance Clusters')
+```
+```{r}
+#Save plot in file
+
+png("Hamming_clusters.png",width=1800,height = 400)
+plot(cl_tree,main='Hamming Distance Clusters')
+dev.off()
+
 ```
 
 
@@ -200,5 +208,10 @@ cl_tree <- hclust(as.dist(cd_matrix))
 
 plot(cl_tree)
 
+```
+```{r}
+png("Cityblock_clusters.png",width=1800,height = 400)
+plot(cl_tree,main='Cityblock Distance Clusters')
+dev.off()
 ```
 
