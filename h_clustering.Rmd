@@ -138,8 +138,13 @@ View(d_matrix2)
 
 cl_tree <- hclust(as.dist(d_matrix))
 
+<<<<<<< HEAD
+#pr <- clip.clust(cl_tree,k=7)
+#plot(pr, main=paste("pruned tree, k=7"))
+=======
 plot(cl_tree,main='Cluster Dendrogram for Matching Cultivars')
 ```
+>>>>>>> 945e4a9fb06df5eeb04dc016438bd4511f368e95
 
 ```{r}
 png("plot.png",width=1800,height=400)
