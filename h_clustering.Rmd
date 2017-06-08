@@ -19,8 +19,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 ```{r, message=FALSE}
-install.packages("vcfR")
-library(vcfR)
+if (!require('vcfR')) install.packages('vcfR') 
+library('vcfR')
 ```
 
 ### get data ###
@@ -108,6 +108,21 @@ euclidean<- function(a1,a2){
 
 
 ```
+```{r}
+
+#num_gen <- ncol(vcf_gt_data)
+# d_matrix <- matrix(nrow=19,ncol=19)
+# for(i in 1:19){
+#   d_matrix[i,i] <- 0
+#   for(j in 1:i-1){
+#     d_matrix[i,j] <- d_matrix[j,i] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
+#   }
+# }
+
+
+```
+
+
 ### produce matrix of pairwise distances between genomes ###
 ```{r}
 
@@ -115,17 +130,19 @@ dist_matrix <- function(vcf_gt_data,FUN=cityblock){
   num_gen <- ncol(vcf_gt_data)
   d_m     <- matrix(nrow=num_gen,ncol=num_gen)
   for(i in 1:num_gen){
+    d_m[i,i] <- 0
     for(j in 1:i-1){
-      d_m[i,j] <- FUN(vcf_gt_data[,i],vcf_gt_data[,j])
+      d_m[i,j] <- d_m[j,i] <- FUN(vcf_gt_data[,i],vcf_gt_data[,j])
     }
   }
   return(d_m)
 }
-
-d_matrix1 <- dist_matrix(vcf_gt_match, FUN=hamming)
-View(d_matrix1)
-d_matrix2 <- dist_matrix(vcf_gt_match, FUN=cityblock)
-View(d_matrix2)
+```
+```{r}
+#d_matrix1 <- dist_matrix(vcf_gt_match, FUN=hamming)
+#View(d_matrix)
+d_matrix2 <- dist_matrix(vcf_gt[,200:304], FUN=cityblock)
+#View(d_matrix2)
 #d_matrix3 <- dist_matrix(vcf_gt_match, FUN=euclidean)
 #View(d_matrix3)
 
@@ -146,7 +163,32 @@ cl_tree2 <- hclust(as.dist(d_matrix2))
 
 plot(cl_tree2,main='Cluster Dendrogram for Matching Cultivars, D2')
 ```
+```{r}
+if(!require(dendextend)) install.packages("dendextend")
+library("dendextend")
+```
 
+```{r}
+dend <- as.dendrogram(cl_tree2)
+dend <- color_branches(dend, k=3)
+
+#library(colorspace)
+plot(dend,main='Cluster Dendrogram for All Cultivars, D2')
+```
+```{r}
+#Save picture:
+png(file="cluster_dend_all.png",width=1800,height = 400)
+plot(dend,main='Cluster Dendrogram for All Cultivars, D2')
+dev.off()
+```
+
+```{r}
+if(!require(circlize)) install.packages('circlize')
+library(circlize)
+circlize_dendrogram(dend)
+
+```
+#####################
 ```{r}
 png("plot.png",width=1800,height=400)
 plot(cl_tree,main='Cluster Dendrogram for Matching Cultivars')
@@ -155,20 +197,52 @@ dev.off()
 
 ```{r}
 
-heatmap(d_matrix2)
+heatmap(d_matrix,sym=TRUE)
+
+
+```
+```{r}
+
+heatmap(d_matrix,Rowv = as.dendrogram(cl_tree2),sym=TRUE)
 
 
 ```
 
+## Extracting genesys data 
+```{r, message=F, warning=F}
+library(dplyr)
+accessions <- read.csv("~/Team5/data/df_traits_nutrition.csv")
 
+genesys_nutrition <- accessions %>%
+  mutate(acceNumb = gsub("PI ", "PI", acceNumb))
 
+accessions <- read.csv("~/Team5/data/df_traits_growth.csv")
+
+genesys_growth <- accessions %>%
+  mutate(acceNumb = gsub("PI ", "PI", acceNumb))
+
+```
 
 ```{r}
-## Cut the tree to the level of 3 branches
-## Each object (gene) is assigned to one of the 3 clusters
-clusters <- cutree(cl_tree,k=3)
+#genesys_nut_sort <- genesys_nutrition[order(genesys_nutrition$acceNumb),]
+#genesys_growth_sort <- genesys_growth[order(genesys_growth$acceNumb),]
+#genesys_growth$acceNumb
+#genesys_nutrition$acceNumb
+match_2_genesys<-genesys_growth$acceNumb %in% genesys_nutrition$acceNumb
 
-## Count the number of genes per cluster
-table(clusters)
+genesys_growth2 <- genesys_growth[match_2_genesys]
+
+match_2_genesys<-genesys_nutrition$acceNumb %in% genesys_growth$acceNumb
+
+genesys_nutrition2 <- genesys_nutrition[match_2_genesys]
+
+genesys_total <-
+
 ```
+```{r}
+
+
+
+```
+
 
