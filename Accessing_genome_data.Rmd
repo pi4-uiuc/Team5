@@ -44,7 +44,7 @@ table1 = gt_file[,2] #access a single genome, pick numbers between 2 and 305
 key_names = gt_file[0,] # access the names of the file as a matrix
 attr(gt_file,"dimnames") # access the names of files as a list of character strings
 PI_tables=gt_file[,startsWith(colnames(gt_file),"PI")] # creates a table of genomes whose IDs begin with PI
-key_names
+
 
 ```
 
@@ -163,7 +163,7 @@ print((m-n)[1:2,])
 sum(abs(m-n))
 5%%2
 ```
-
+The following creates a distance table for hamming distance:
 ```{r}
 hd_matrix <- matrix(,nrow=304,ncol=304)
 for(i in 1:304){
@@ -180,19 +180,36 @@ for(i in 1:304){
 ```{r}
 #hd_matrix <- matrix()
 
-cl_tree <- hclust(as.dist(hd_matrix))
+cl_tree <- hclust(as.dist(hd_matrix),method = 'complete')
+clusters <- cutree(cl_tree,h=5)
+cent<- NULL
+for (i in 1:5){
+  cent<-rbind(cent, colMeans(hd_matrix[clusters == i]))
+}
 
-plot(cl_tree,main='Hamming Distance Clusters')
+cl_cutree<-hclust(as.dist(cent),method = 'complete', members = table(clusters))
+plot(clusters)
+
+table_colors<-clusters[]
+table_colors[table_colors == 1]<-'red'
+table_colors[table_colors==2]<-'blue'
+table_colors[table_colors == 3]<-'green'
+
+plot(cl_tree,main='Hamming Distance Clusters', hang=-1,labels=FALSE,xlab = "Genome Keys",col= table_colors)
+clusters
+cl_tree
 ```
+
+
 ```{r}
 #Save plot in file
 
 png("Hamming_clusters.png",width=1800,height = 400)
-plot(cl_tree,main='Hamming Distance Clusters')
+plot(cl_tree,main='Hamming Distance Clusters', labels = as.vector(key_names))
 dev.off()
 
 ```
-
+We do the same for Cityblock distances.
 
 ```{r}
 cd_matrix <- matrix(,nrow=304,ncol=304)
@@ -205,13 +222,17 @@ for(i in 1:304){
 }
 
 cl_tree <- hclust(as.dist(cd_matrix))
-
-plot(cl_tree)
-
+ 
+plot(cl_tree,hang = -1,)
 ```
+
+
+ 
+ 
 ```{r}
 png("Cityblock_clusters.png",width=1800,height = 400)
 plot(cl_tree,main='Cityblock Distance Clusters')
 dev.off()
 ```
 
+And finally, run a version for Euclidian
