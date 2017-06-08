@@ -55,14 +55,15 @@ locus_nut_num <- locus_nutrition[, c(6:17)]
 locus_nut_num
 locus_nut_num[,12] <- as.numeric(as.character(locus_nut_num[,12]))
 corMatrix_nut_genomedist = cor(locus_nut_num)
-
 write.csv(corMatrix_nut_genomedist, file = "corMatrix_nut_genomedist.csv")
 
 ## Growth
 df_traits_growth <- read.csv(file = '~/Team5/data/df_traits_growth.csv')
 locus_growth = func_genomefeature_trait(df_traits_growth,1)
-locus_gro_num <- locus10_nutrition[, c(1,6:17)]
+locus_gro_num <- locus_growth[, c(7:11)]
 locus_gro_num
-
+locus_gro_num[,5] <- as.numeric(as.character(locus_gro_num[,5]))
+corMatrix_gro_genomedist = cor(locus_gro_num)
+write.csv(corMatrix_gro_genomedist, file = "corMatrix_gro_genomedist.csv")
 
 #write.csv(genesys_vcf_48, file = "genesys_vcf_48.csv")
