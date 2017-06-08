@@ -37,7 +37,7 @@ vcf_gt = vcf_data@gt
 
 vcf_gt_match <- vcf_gt[,286:304]
 
-#View(vcf_gt_match)
+View(vcf_gt_match)
 ```
 ### mary a's original distance code ###
 ```{r}
@@ -64,7 +64,7 @@ cityblock<- function(a1,a2){
 
 ### updated distance functions ###
 ```{r}
-
+# distance 1
 hamming <- function(x,y) {
   if(length(x)!=length(y)){
     print('error, vectors not same size!')
@@ -88,6 +88,7 @@ tonumericform <- function(a){
 
 #cityblock distance: to get a cityblock magnitude, set a2 to '0|0'.  This is similar to the l_1 distance of a vector
 
+# distance 2
 cityblock<- function(a1,a2){
 
   vec1<-tonumericform(a1)
@@ -136,9 +137,14 @@ View(d_matrix2)
 ```{r}
 
 
-cl_tree <- hclust(as.dist(d_matrix))
+cl_tree1 <- hclust(as.dist(d_matrix1))
 
-plot(cl_tree,main='Cluster Dendrogram for Matching Cultivars')
+plot(cl_tree1,main='Cluster Dendrogram for Matching Cultivars, D1')
+```
+```{r}
+cl_tree2 <- hclust(as.dist(d_matrix2))
+
+plot(cl_tree2,main='Cluster Dendrogram for Matching Cultivars, D2')
 ```
 
 ```{r}
@@ -146,6 +152,16 @@ png("plot.png",width=1800,height=400)
 plot(cl_tree,main='Cluster Dendrogram for Matching Cultivars')
 dev.off()
 ```
+
+```{r}
+
+heatmap(d_matrix2)
+
+
+```
+
+
+
 
 ```{r}
 ## Cut the tree to the level of 3 branches
