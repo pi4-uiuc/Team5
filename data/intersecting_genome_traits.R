@@ -28,10 +28,20 @@ hamming <- function(genome_seq1,genome_seq2){
   distance <- sum(abs(genome_value1 - genome_value2))
   return(distance)
 }
+
+## Dist
 genome_dist = genome_data[1,]
 for(i in c(1:length(genome_dist))){
   genome_dist[i] = hamming(genome_data[,i],'0|0')
 }
+
+## 10
+genome_ten = genome_data[10,]
+for(i in c(1:length(genome_ten))){
+  genome_ten[i] = hamming(genome_ten[i],'0|0')
+}
+
+genome_ten
 
 ## Pulling the accession numbers with both available genes and traits
 func_genomefeature_trait <- function(file,locus_n){
@@ -40,15 +50,27 @@ func_genomefeature_trait <- function(file,locus_n){
   PIs_restricted <- PIs_merged[,1]
   acceNumb = PIs_restricted
   
+  
   ## Merge feature from reduced genome data
-  genome_dist = genome_dist[acceNumb]
-  feature <- data.frame(acceNumb,genome_dist)
-  #genome_restricted = genome_data[,PIs_restricted]
+  locus_10 = genome_ten[acceNumb]
+  feature <- data.frame(acceNumb,locus_10)
+  #genome_dist = genome_dist[acceNumb]
+  #feature <- data.frame(acceNumb,genome_dist)
+  #genome_restricted = genome_data[,acceNumb]
   #feature <- data.frame(acceNumb,genome_restricted[locus_n,])
   feature_traits <- merge(file,feature,by="acceNumb")
 }
 
-## Nutrition corr
+## Correlation between Nutrition and locus10
+df_traits_nutrition <- read.csv(file = '~/Team5/data/df_traits_nutrition.csv')
+locus10_nutrition = func_genomefeature_trait(df_traits_nutrition,10)
+locus10_nut <- locus10_nutrition[, c(6:17)]
+locus10_nut
+locus10_nut[,12] <- as.numeric(as.character(locus10_nut[,12]))
+corMatrix_nut_locus10 = cor(locus10_nut)
+write.csv(corMatrix_nut_locus10, file = "corMatrix_nut_locus10.csv")
+
+## Correlation between Nutrition and Genome dist
 df_traits_nutrition <- read.csv(file = '~/Team5/data/df_traits_nutrition.csv')
 locus_nutrition = func_genomefeature_trait(df_traits_nutrition,1)
 locus_nut_num <- locus_nutrition[, c(6:17)]
@@ -57,7 +79,7 @@ locus_nut_num[,12] <- as.numeric(as.character(locus_nut_num[,12]))
 corMatrix_nut_genomedist = cor(locus_nut_num)
 write.csv(corMatrix_nut_genomedist, file = "corMatrix_nut_genomedist.csv")
 
-## Growth
+## Correlation between Growth and Genome dist
 df_traits_growth <- read.csv(file = '~/Team5/data/df_traits_growth.csv')
 locus_growth = func_genomefeature_trait(df_traits_growth,1)
 locus_gro_num <- locus_growth[, c(7:11)]
@@ -65,5 +87,3 @@ locus_gro_num
 locus_gro_num[,5] <- as.numeric(as.character(locus_gro_num[,5]))
 corMatrix_gro_genomedist = cor(locus_gro_num)
 write.csv(corMatrix_gro_genomedist, file = "corMatrix_gro_genomedist.csv")
-
-#write.csv(genesys_vcf_48, file = "genesys_vcf_48.csv")
