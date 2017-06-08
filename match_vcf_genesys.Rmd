@@ -1,0 +1,145 @@
+---
+title: "match_vcf_genesys"
+output: html_document
+---
+
+## Extracting genesys data 
+```{r, message=F, warning=F}
+files <- dir("~/genesys", pattern = '.csv', full.names = TRUE)
+accessions <- read.csv(files[6])
+files <- files[c(1:5,7:36)]
+tables <- gsub(".csv", "", basename(files))
+
+library(dplyr)
+for(i in seq_along(files)){
+  next_table <- read.csv(files[i])
+  next_table$datasetId <- NULL
+  colnames(next_table)[colnames(next_table) == 'value'] <- tables[i]
+  accessions <- left_join(accessions, next_table, by = 'genesysId')
+}
+
+genesys_data <- accessions %>%
+  mutate(acceNumb = gsub("PI ", "PI", acceNumb))
+```
+
+### Sort genesys_data by the PIs
+```{r}
+genesys_data_sorted <- genesys_data[order(genesys_data$acceNumb),]
+```
+
+## Extracting vcf data 
+```{r, message=F, warning=F}
+#install.packages("vcfR")
+library(vcfR)
+vcf_data <- read.vcfR(file="/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf")
+
+vcf_fix = vcf_data@fix
+vcf_gt = vcf_data@gt
+vcf_meta = vcf_data@meta
+
+colnames(vcf_gt)<-gsub(".MERGE", "",colnames(vcf_gt))
+```
+
+##  Find matching cultivar IDs
+```{r}
+match_vcf<-colnames(vcf_gt) %in% genesys_data_sorted$acceNumb
+colnames(vcf_gt)[match_vcf]
+
+match_genesys<- genesys_data_sorted$acceNumb  %in% colnames(vcf_gt)
+genesys_data_sorted[match_genesys,]$acceNumb
+```
+
+### Extract 19 matches from genesys
+```{r}
+genesys_data_match <- genesys_data_sorted[match_genesys,]
+```
+
+### Extract 19 matches from vcf
+```{r}
+vcf_gt_match <- vcf_gt[,match_vcf]
+```
+
+### compute genetic distance
+
+The following is an allele distance table which will define allele differences
+```{r}
+names <-c('0|0','0|1','1|0','1|1')
+allele_dif_table <- matrix(c(0,1,1,2,1,0,0,1,1,0,0,1,2,1,1,0), nrow = 4,ncol = 4, dimnames = list(names, names))
+```
+
+### function turns strings '0|1'  into vectors c(0,1) etc.
+```{r}
+tonumericform <- function(a){
+  vec1<-matrix(nrow = length(a),ncol =2)
+  vec1[a=='0|0']<-c(0,0)
+  vec1[a=='1|1']<-c(1,1)
+  vec1[a=='0|1']<-c(0,1)
+  vec1[a == '1|0']<-c(1,0)
+  return(as.numeric(vec1)) 
+} 
+```
+
+cityblock distance
+```{r}
+cityblock<- function(a1,a2){
+  vec1<-tonumericform(a1)
+  vec2<-tonumericform(a2)
+  point_dif<-vec1-vec2
+  dif<- sum(abs(vec1-vec2))
+  return(dif)
+}
+```
+
+distance vector
+```{r}
+d_vector <- vector()
+for(i in 1:19){
+    d_vector[i] <- cityblock(vcf_gt_match[,i],rep('0|0',70693))
+}
+```
+
+distance matrix
+```{r}
+d_matrix <- matrix(,nrow = 19,ncol=19)
+for(i in 1:19){
+  for(j in 1:19){
+    d_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
+  }
+}
+heatmap(d_matrix, sym=TRUE)
+```
+
+### tree
+```{r}
+cl_tree <- hclust(as.dist(d_matrix))
+plot(cl_tree)
+
+```
+
+### add d_vector to genesys_data_match as last column 
+```{r}
+genesys_data_match[,40] <- d_vector
+```
+
+```{r}
+genesys_matrix <- data.matrix(genesys_data_match[,c('anthesis1','exsertion','plantcol','planthgt')], rownames.force = NA)
+rownames(genesys_matrix) <- genesys_data_match[,'V40']
+heatmap(genesys_matrix, Colv=NULL)
+```
+Plant hight.
+```{r}
+plot(genesys_data_match[,'V40'], genesys_data_match[,'planthgt'])
+```
+PLant color.
+```{r}
+plot(genesys_data_match[,'V40'], genesys_data_match[,'plantcol'])
+```
+
+Anthesis  is the flowering period of a plant, from the opening of the flower bud.
+```{r}
+plot(genesys_data_match[,'V40'], genesys_data_match[,'anthesis1'])  
+```
+What is exsertion?
+```{r}
+plot(genesys_data_match[,'V40'], genesys_data_match[,'exsertion'])
+```
