@@ -9,34 +9,38 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r}
-install.packages("combinat")
-install.packages("maptree")
-install.packages("e1071")
-
-library(combinat)
-library(maptree)
-library(e1071)
+# install.packages("combinat")
+# install.packages("maptree")
+# install.packages("e1071")
+# 
+# library(combinat)
+# library(maptree)
+# library(e1071)
 
 ```
-```{r}
+```{r, message=FALSE}
 install.packages("vcfR")
 library(vcfR)
 ```
+
+### get data ###
 ```{r}
+### get genomic data from terraref ###
+
 vcf_data <- read.vcfR(file="/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf")
+
+### @gt contains the genomic data ###
+
 vcf_gt = vcf_data@gt
+
+### columns 286:304 were determined to match traits data from genesys ###
+
 vcf_gt_match <- vcf_gt[,286:304]
 
-View(vcf_gt_match)
+#View(vcf_gt_match)
 ```
-
-
-
+### mary a's original distance code ###
 ```{r}
-##########
-# mary a's code
-##########
-
 
 names <-c('0|0','0|1','1|0','1|1')
 allele_dif_table <- matrix(c(0,1,1,2,1,0,0,1,1,0,0,1,2,1,1,0),
@@ -56,61 +60,99 @@ cityblock<- function(a1,a2){
  dif<- sum(abs(as.numeric(vec2)-as.numeric(vec1)))
 }
 
-#cityblock(gt_file[,2],gt_file[,3])
-
-#city_distances <- vector()
-# for (i in 2:305){
-#   city_distances[i-1] <-cityblock(gt_file[,i],'0|0')
-#   i
-# }
-
-#hist(city_distances,breaks = 25)
 ```
 
-
+### updated distance functions ###
 ```{r}
-# should get dimensions more generally
 
-d_matrix <- matrix(,nrow=19,ncol=19)
-for(i in 1:19){
-  for(j in 1:i-1){
-    d_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
+hamming <- function(x,y) {
+  if(length(x)!=length(y)){
+    print('error, vectors not same size!')
+  }else{
+    result <- length(x[x!=y])
+    
+    return(result)
   }
 }
 
-View(d_matrix)
+#turns genomes into vectors with entries 0,1,2, where '0|0'-> 0; '0|1','1|0' ->1; '1|1'-> 2. 
+
+tonumericform <- function(a){
+  vec1<-matrix(nrow = length(a),ncol =2)
+  vec1[a=='0|0']<-c(0,0)
+  vec1[a=='1|1']<-c(1,1)
+  vec1[a=='0|1']<-c(0,1)
+  vec1[a == '1|0']<-c(1,0)
+  return(as.numeric(vec1)) 
+} 
+
+#cityblock distance: to get a cityblock magnitude, set a2 to '0|0'.  This is similar to the l_1 distance of a vector
+
+cityblock<- function(a1,a2){
+
+  vec1<-tonumericform(a1)
+  vec2<-tonumericform(a2)
+  point_dif<-vec1-vec2
+  dif<- sum(abs(vec1-vec2))
+  return(dif)
+}
+
+#Euclidean distance: to get a Euclidean Magnitude, set a2 to '0|0''
+
+euclidean<- function(a1,a2){
+  vec1<-tonumericform(a1)
+  vec2<-tonumericform(a2)
+  dif <- norm(vec1-vec2,"2")
+}
+
+
+```
+### produce matrix of pairwise distances between genomes ###
+```{r}
+
+dist_matrix <- function(vcf_gt_data,FUN=cityblock){
+  num_gen <- ncol(vcf_gt_data)
+  d_m     <- matrix(nrow=num_gen,ncol=num_gen)
+  for(i in 1:num_gen){
+    for(j in 1:i-1){
+      d_m[i,j] <- FUN(vcf_gt_data[,i],vcf_gt_data[,j])
+    }
+  }
+  return(d_m)
+}
+
+d_matrix1 <- dist_matrix(vcf_gt_match, FUN=hamming)
+View(d_matrix1)
+d_matrix2 <- dist_matrix(vcf_gt_match, FUN=cityblock)
+View(d_matrix2)
+#d_matrix3 <- dist_matrix(vcf_gt_match, FUN=euclidean)
+#View(d_matrix3)
+
 
 ```
 
-## not yet run/tested stuff
-```{r}
-help("dist")
-```
+### Cluster Dendrogram ###
 
 ```{r}
 
-# d_matrix <- matrix()
 
 cl_tree <- hclust(as.dist(d_matrix))
 
-plot(cl_tree)
-
-## Cut the tree to the level of 7 branches
-## Each object (gene) is assigned to one of the 7 clusters
-clusters <- cutree(cl_tree,k=7)
-
-## Count the number of genes per cluster
-table(clusters)
-
-
-## Another library, maptree, contains the method clip.clust(), which allows to plot the main branches of the tree.
-
-pr <- clip.clust(cl_tree,k=7)
-plot(pr, main=paste("pruned tree, k=7"))
-
+plot(cl_tree,main='Cluster Dendrogram for Matching Cultivars')
 ```
 
 ```{r}
+png("plot.png",width=1800,height=400)
+plot(cl_tree,main='Cluster Dendrogram for Matching Cultivars')
+dev.off()
+```
 
+```{r}
+## Cut the tree to the level of 3 branches
+## Each object (gene) is assigned to one of the 3 clusters
+clusters <- cutree(cl_tree,k=3)
+
+## Count the number of genes per cluster
+table(clusters)
 ```
 
