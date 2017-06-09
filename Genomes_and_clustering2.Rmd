@@ -7,13 +7,13 @@ output: html_notebook
 Accessing genomic data and nutrition data
 
 ```{r, message=F, warning=F}
-accessions <- read.csv("~/Desktop/PI4 2017/myproject/Team5/data/df_traits_nutrition.csv")
-genesys_data <- accessions %>%
+accessions2 <- read.csv("~/Desktop/PI4 2017/myproject/Team5/data/df_traits_nutrition.csv")
+genesys_data2 <- accessions2 %>%
   mutate(acceNumb = gsub("PI ", "PI", acceNumb))
 ```
 
 ```{r}
-genesys_data_sorted <- genesys_data[order(genesys_data$acceNumb),]
+genesys_data_sorted2 <- genesys_data2[order(genesys_data2$acceNumb),]
 
 reference = genome_table@fix
 View(reference)
@@ -22,20 +22,20 @@ meta_file = genome_table@meta
 
 colnames(gt_file)<-gsub(".MERGE", "",colnames(gt_file))
 
-genesys_data_sorted <- genesys_data[order(genesys_data$acceNumb),]
+genesys_data_sorted2 <- genesys_data2[order(genesys_data2$acceNumb),]
 ```
 
 ```{r}
-match_vcf<-colnames(gt_file) %in% genesys_data_sorted$acceNumb
-colnames(gt_file)[match_vcf]
+match_vcf2<-colnames(gt_file) %in% genesys_data_sorted2$acceNumb
+colnames(gt_file)[match_vcf2]
 
 
 
-match_genesys<- genesys_data_sorted$acceNumb  %in% colnames(gt_file)
-genesys_data_sorted[match_genesys,]$acceNumb
+match_genesys2<- genesys_data_sorted2$acceNumb  %in% colnames(gt_file)
+genesys_data_sorted2[match_genesys2,]$acceNumb
 
-genesys_data_match <- genesys_data_sorted[match_genesys,]
-vcf_gt_match <- gt_file[,match_vcf]
+genesys_data_match2 <- genesys_data_sorted2[match_genesys2,]
+vcf_gt_match2 <- gt_file[,match_vcf2]
 
 
 ```
@@ -45,7 +45,7 @@ vcf_gt_match <- gt_file[,match_vcf]
 d_matrix <- matrix(,nrow = 48,ncol=48)
 for(i in 1:48){
   for(j in i:48){
-    d_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
+    d_matrix[i,j] <- cityblock(vcf_gt_match2[,i],vcf_gt_match2[,j])
     d_matrix[j,i] <-d_matrix[i,j]
   }
 }
@@ -60,7 +60,7 @@ CLustering for euclidean distance
 ed_matrix <- matrix(,nrow = 48,ncol=48)
 for(i in 1:48){
   for(j in i:48){
-    ed_matrix[i,j] <- euclidean(vcf_gt_match[,i],vcf_gt_match[,j])
+    ed_matrix[i,j] <- euclidean(vcf_gt_match2[,i],vcf_gt_match2[,j])
     ed_matrix[j,i] <-ed_matrix[i,j]
   }
 }
@@ -70,7 +70,7 @@ ct_tree <-hclust(dist(ed_matrix,method = "euclidean")) %>%
   set("labels_cex", 0.6) %>%
   set("labels_col",value = 2:4,k=6) %>%
   set("branches_k_color", value = 2:4, k = 6) %>%
-  set("labels",colnames(vcf_gt_match)) %>%
+  set("labels",colnames(vcf_gt_match2)) %>%
   plot(main='Nutrition trait genomic clusters') 
 
 png("myproject/Team5/48_trait_euclidean_genomic_clusters.png")
@@ -79,36 +79,36 @@ ct_tree <-hclust(dist(ed_matrix,method = "euclidean")) %>%
   set("labels_cex", 0.6) %>%
   set("labels_col",value = 2:4,k=6) %>%
   set("branches_k_color", value = 2:4, k = 6) %>%
-  set("labels",colnames(vcf_gt_match)) %>%
+  set("labels",colnames(vcf_gt_match2)) %>%
   plot(main='Nutrition trait genomic clusters') 
 dev.off()  
 ```
 clustering for hamming distance
 
 ```{r}
-hd_matrix <- matrix(,nrow = 48,ncol=48)
+hd_matrix48 <- matrix(,nrow = 48,ncol=48)
 for(i in 1:48){
   for(j in i:48){
-    hd_matrix[i,j] <- hamming(vcf_gt_match[,i],vcf_gt_match[,j])
-    hd_matrix[j,i] <-hd_matrix[i,j]
+    hd_matrix48[i,j] <- hamming(vcf_gt_match2[,i],vcf_gt_match2[,j])
+    hd_matrix48[j,i] <-hd_matrix48[i,j]
   }
 }
 heatmap(hd_matrix, sym=TRUE)
-ct_tree <-hclust(dist(hd_matrix,method = "manhattan")) %>% 
+ct_tree48 <-hclust(dist(hd_matrix48,method = "manhattan")) %>% 
   as.dendrogram() %>% 
   set("labels_cex", 0.6) %>%
   set("labels_col",value = 2:4,k=6) %>%
   set("branches_k_color", value = 2:4, k = 6) %>%
-  set("labels",colnames(vcf_gt_match)) %>%
+  set("labels",colnames(vcf_gt_match2)) %>%
   plot(main='Nutrition trait genomic clusters') 
 
 png("myproject/Team5/48_trait_binary_genomic_clusters.png")
-ct_tree <-hclust(dist(hd_matrix,method = "manhattan")) %>% 
+ct_tree48_2 <-hclust(dist(hd_matrix,method = "manhattan")) %>% 
   as.dendrogram() %>% 
   set("labels_cex", 0.6) %>%
   set("labels_col",value = 2:4,k=6) %>%
   set("branches_k_color", value = 2:4, k = 6) %>%
-  set("labels",colnames(vcf_gt_match)) %>%
+  set("labels",colnames(vcf_gt_match2)) %>%
   plot(main='Nutrition trait genomic clusters') 
 dev.off()  
 ```
@@ -116,11 +116,11 @@ dev.off()
 clustering for manhattan distance
 
 ```{r}
-cd_matrix <- matrix(,nrow = 48,ncol=48)
+cd_matrix48 <- matrix(,nrow = 48,ncol=48)
 for(i in 1:48){
   for(j in i:48){
-    cd_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
-    cd_matrix[j,i] <-cd_matrix[i,j]
+    cd_Matrix48[i,j] <- cityblock(vcf_gt_match2[,i],vcf_gt_match2[,j])
+    cd_matrix48[j,i] <-cd_matrix48[i,j]
   }
 }
 heatmap(hd_matrix, sym=TRUE)
@@ -129,7 +129,7 @@ ct_tree <-hclust(dist(cd_matrix,method = "manhattan")) %>%
   set("labels_cex", 0.6) %>%
   set("labels_col",value = 2:4,k=6) %>%
   set("branches_k_color", value = 2:4, k = 6) %>%
-  set("labels",colnames(vcf_gt_match)) %>%
+  set("labels",colnames(vcf_gt_match2)) %>%
   plot(main='Nutrition trait genomic clusters') 
 
 png("myproject/Team5/48_trait_manhattan_genomic_clusters.png")
@@ -138,7 +138,7 @@ ct_tree <-hclust(dist(cd_matrix,method = "manhattan")) %>%
   set("labels_cex", 0.6) %>%
   set("labels_col",value = 2:4,k=6) %>%
   set("branches_k_color", value = 2:4, k = 6) %>%
-  set("labels",colnames(vcf_gt_match)) %>%
+  set("labels",colnames(vcf_gt_match2)) %>%
   plot(main='Nutrition trait genomic clusters') 
 dev.off()  
 ```
@@ -197,11 +197,11 @@ vcf_gt_match <- gt_file[,match_vcf]
 
 manhattan 
 ```{r}
-d_matrix <- matrix(,nrow = 19,ncol=19)
+d_matrix2 <- matrix(,nrow = 19,ncol=19)
 for(i in 1:19){
   for(j in i:19){
-    d_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
-    d_matrix[j,i] <-d_matrix[i,j]
+    d_matrix2[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
+    d_matrix2[j,i] <-d_matrix2[i,j]
   }
 }
 
@@ -228,26 +228,43 @@ euclidean
 d_matrix <- matrix(,nrow = 19,ncol=19)
 for(i in 1:19){
   for(j in i:19){
-    d_matrix[i,j] <- euclidean(vcf_gt_match[,i],vcf_gt_match[,j])
+    d_matrix[i,j] <- hamming(vcf_gt_match[,i],vcf_gt_match[,j])
     d_matrix[j,i] <-d_matrix[i,j]
   }
 }
 
-ct_tree <-hclust(dist(d_matrix,method = "euclidean")) %>% 
-  as.dendrogram() %>% 
-  set("labels_cex", 0.6) %>%
-  set("branches_k_color", value = 2:4, k = 3) %>%
-  set("labels",colnames(vcf_gt_match)) %>%
-  plot(main='Nutrition trait genomic clusters') 
+d_matrix2 <- matrix(,nrow = 19,ncol=19)
+for(i in 1:19){
+  for(j in i:19){
+    d_matrix2[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
+    d_matrix2[j,i] <-d_matrix2[i,j]
+  }
+}
 
-png("myproject/Team5/19_trait_euclidean_genomic_clusters.png")
-ct_tree <-hclust(dist(d_matrix,method = "manhattan")) %>% 
+
+ct_tree3 <-hclust(dist(d_matrix,method = "manhattan")) %>% 
   as.dendrogram() %>% 
   set("labels_cex", 0.6) %>%
   set("branches_k_color", value = 2:4, k = 3) %>%
   set("labels",colnames(vcf_gt_match)) %>%
-  plot(main='Nutrition trait genomic clusters') 
-dev.off()  
+  set("labels_col",value = 2:4,k=3) 
+  #plot(main='Nutrition trait genomic clusters') 
+
+#png("myproject/Team5/19_trait_euclidean_genomic_clusters.png")
+ct_tree4 <-hclust(dist(d_matrix2,method = "manhattan")) %>% 
+  as.dendrogram() %>% 
+  set("labels_cex", 0.6) %>%
+  set("branches_k_color", value = 2:4, k = 3) %>%
+  set("labels",colnames(vcf_gt_match)) %>%
+  set("labels_col",labels_col(ct_tree3)[order(labels(ct_tree4))]) 
+  #plot(main='Nutrition trait genomic clusters') 
+#dev.off()  
+ 
+png("dual48clusters.png")
+par(mfrow=c(1,2))
+plot(ct_tree3,main="nutrition trait hamming clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree4,main="nutrition trait manhattan clusters",side=TRUE)
+dev.off()
 
 ```
 

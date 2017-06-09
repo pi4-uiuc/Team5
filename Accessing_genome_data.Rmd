@@ -231,7 +231,7 @@ for(i in 1:304){
   if (i%%1 == 0) print(i)
 }
 
-ct_tree <-hclust(dist(cd_matrix,method = "manhattan")) %>% 
+ct_tree1 <-hclust(dist(cd_matrix,method = "manhattan")) %>% 
   as.dendrogram() %>% 
   set("labels_cex", 0.5) %>%
   set("labels_col",value = 1:4,k=8) %>%
@@ -250,14 +250,57 @@ ct_tree <-hclust(dist(cd_matrix,method = "manhattan")) %>%
  
 ```{r}
 png("Cityblock_clusters.png",width=800,height = 3600)
-ct_tree <-hclust(dist(cd_matrix,method = "manhattan")) %>% 
+ct_tree1 <-hclust(dist(cd_matrix,method = "manhattan")) %>% 
   as.dendrogram() %>% 
   set("labels_cex", 0.5) %>%
   set("labels_col",value = 2:4,k=6) %>%
   set("branches_k_color", value = 2:4, k = 6) %>%
   set("labels",colnames(vcf_gt_match)) %>%
-  plot(main='Genomic clusters',horiz=TRUE) 
+  plot(main='Genomic clusters') 
 dev.off()
 ```
 
-And finally, run a version for Euclidian
+Now, put them together
+
+```{r}
+
+ct_tree1 <-hclust(dist(hd_matrix,method = "manhattan")) %>% 
+  as.dendrogram() %>% 
+  set("labels_cex", 0.5) %>%
+  set("labels_col",value = 1:4,k=8) %>%
+  set("branches_k_color", value = 1:4, k = 8) %>%
+  set("labels",colnames(vcf_gt_match)) 
+
+ct_tree2 <-hclust(dist(cd_matrix,method = "manhattan")) %>% 
+  as.dendrogram() %>% 
+  set("labels_cex", 0.5) %>%
+  set("labels_col",labels_col(ct_tree1)[order(labels(ct_tree2))]) %>%
+  set("branches_k_color", value = 1:4, k = 8) %>%
+  set("labels",colnames(vcf_gt_match)) 
+
+par(mfrow=c(1,2))
+ct_tree1 %>%  plot(main="Distance 1 Clusters")
+ct_tree2 %>%  plot(main ="Distance 2 Clusters")
+
+
+
+```
+
+```{r}
+
+trees=dendlist(ct_tree1,ct_tree2) %>%
+tanglegram(common_subtrees_color_branches = TRUE)
+```
+
+```{r}
+length(labels_col(ct_tree1)[labels_col(ct_tree1)==labels_col(ct_tree2)])
+```
+
+```{r}
+dend15 <- c(1:5) %>% dist %>% hclust(method = "average") %>% as.dendrogram
+dend15 <- dend15 %>% set("labels_to_char")
+dend51 <- dend15 %>% set("labels", as.character(5:1)) %>% match_order_by_labels(dend15)
+dends_15_51 <- dendlist(dend15, dend51)
+dends_15_51
+```
+
