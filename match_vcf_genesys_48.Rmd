@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Extracting genesys data 
 ```{r, message=F, warning=F}
 library(dplyr)
-accessions <- read.csv("~/Team5/data/df_traits_nutrition.csv")
+accessions <- read.csv("~/Team5/data/CopyOfdf_traits_nutrition.csv")
 
 genesys_data <- accessions %>%
   mutate(acceNumb = gsub("PI ", "PI", acceNumb))
@@ -115,7 +115,12 @@ for(i in 1:48){
 }
 heatmap(d_matrix, sym=TRUE)
 ```
-
+#Save picture:
+```{r}
+png(file="heatmap_48_VCFxVCF.png",width=500,height = 500)
+heatmap(d_matrix, sym=TRUE)
+dev.off()
+```
 
 ### tree kmeans
 ```{r}
