@@ -1,0 +1,137 @@
+An exploration of genotype-phenotype correlation in Sorghum bicolor
+========================================================
+author: Team 5:  Stacey Butler, Michael Livesay, Robert Rennie, Sarka Petrickova, Mary Angelica Tursi
+date: June 9, 2017
+autosize: true
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Introduction
+===============
+
+- *Genotype* is an organism’s full hereditary information. 
+- *Phenotype* is an organism’s actual observed properties, such as morphology, development, or behavior.
+
+### Questions
+
+- Can we find correlations between genotype and phenotype data?
+- What clusters can be seen in genotypes using different methods for measuring distance between two genotypes?
+
+Introduction
+===============
+
+![](http://passel.unl.edu/Image/siteImages/ChromgendnaLG.jpg)
+
+http://passel.unl.edu/Image/siteImages/ChromgendnaLG.jpg
+
+Introduction
+=============
+
+![](http://images.slideplayer.com/24/7019791/slides/slide_21.jpg)
+
+http://images.slideplayer.com/24/7019791/slides/slide_21.jpg
+
+Data: Genotype file - VCF (from Terraref)
+========================================================
+
+.vcf file consists of three regions:
+
+-  **meta**: info about the file and its creation
+-  **fix**: reference table
+
+|location|  reference  | alternate  | 
+|---|---|---|
+| 340  |  C  |  G |  
+| 1200  | A  |  C |  
+
+-  **gt**: genotype region contains information about each variant for each sample
+
+|location|  culivar1  | cultivar2  | cultivar3 |
+|---|---|---|---|
+| 340  |  0/0 | 0/1 | 1/0 |
+| 1200  | 1/1 | 0/0 | 0/1 |
+
+
+Data: Phenotype files - CSV (Genesys)
+========================================================
+
+Two types of data:
+- nutrition: Fat, Fiber, Mtblzble_Enrgy, NetEnGain, NetEnLact, NetEnMaint, Phosphorus, Protein, Starch, TotalNutrients
+- growth: kercolor, kercover, kershape, paniclelgt, plantcol, planthgt, rust, seedtype,...
+
+
+Data: Combining files
+========================================================
+- 304 cultivars in genotype data
+- thousands of cultivars in phenotype nutrition and growth data 
+- only 48 cultivars with both genotype and phenotype nutrition data
+- only 19 cultivars with both genotype and phenotype growth data
+
+Methods
+==============
+- measuring distance: three kinds of distance: for two genomes $g_1,g_2$:
+  - $|\{i: g_1[i]\neq g_2[i] \}|$
+  - $\sum |g_1[i]-g_2[i]|$
+  - Euclidean distance
+- clustering: We used the hclust function and the dendexpend package to graphically illustrate the clusters
+
+Methods
+==============
+
+- heatmaps: a table of colors which illustrates how values of traits correspond to genomic clusters and other traits
+  - used heatmap function
+- traits: found matches of two samples for different traits:
+  - 19 genomes with growth traits
+  - 48 genomes with nutrition traits
+  - some traits, such as plant color, are qualitative, so we quantified them according to a natural scale
+
+Results
+================
+
+- Clustering: hclust
+- Heatmaps: clustered cultivars versus nutrition traits
+- Correlation: cultivars versus nutrition traits
+- Topological data analysis
+
+Results: Clustering
+================
+
+![](Team5/dual48clusters.png)
+
+Results: Clustering
+================
+
+![](Team5/largeCLusters.png)
+
+Results: Heatmaps
+================
+
+![](Team5/heatmap_48_dist2.png)
+
+Results: Correlation
+================ 
+
+![](Team5/correletions_48_colors.png)
+
+
+Results: Topological data analysis
+================ 
+
+![](Team5/protein_mapper.png)
+
+
+Conclusion & Next Steps
+===================
+
+- we have some tenuous connections between genotypes and phenotypes...
+
+- ... but in order to say anything meaningful we need more data
+
+## "Things that you think will take two weeks will probably take four."
+
+
+
+
+
+
