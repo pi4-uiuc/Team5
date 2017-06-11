@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='utf-8'?>
+<archive xmlns="http://rs.tdwg.org/dwc/text/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://rs.tdwg.org/dwc/text/ http://rs.tdwg.org/dwc/text/tdwg_dwc_text.xsd">
+<core encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>core.csv</location></files>
+	<id index="0" />
+	<field index="1" term="http://purl.org/germplasm/germplasmType#wiewsInstituteID"/>
+	<field index="2" term="http://purl.org/germplasm/germplasmTerm#germplasmIdentifier"/>
+	<field index="3" term="http://rs.tdwg.org/dwc/terms/genus"/>
+</core>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>adf.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//759"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>crudeprot.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//761"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>hrivdmd12.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//762"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>fat.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//763"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>phosphorou.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//764"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>starch.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//765"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>menergy.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//792"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>negain.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//793"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>nelact.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//794"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>nemaint.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//795"/>
+</extension>
+<extension encoding="UTF-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="0">
+	<files><location>tdn.csv</location></files>
+	<coreid index="0" />
+	<field index="1" term="http://rs.tdwg.org/dwc/terms/datasetID"/>
+	<field index="2" term="http://www.genesys-pgr.org/descriptors//796"/>
+</extension>
+</archive>
