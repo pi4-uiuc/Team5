@@ -1,0 +1,538 @@
+---
+title: "Genetic clustering for nutrition traits info"
+output: html_notebook
+---
+
+. 
+Accessing genomic data and nutrition data: Read csv files of nutrition in data folder, and read the vcf file:
+
+
+```{r, message=F, warning=F}
+library(dplyr)  
+library(vcfR)
+accessions1 <- read.csv("data/CopyOfdf_traits_nutrition.csv")
+
+genesys_data1<- accessions1 %>%
+  mutate(acceNumb = gsub("PI ", "PI", acceNumb))
+
+#read VCF file
+genome_table <- read.vcfR('imp_TERRA_RIL_SNP.vcf')
+
+#name the parts of vcf file: reference gives a table of the reference genome and positions of alternates, gt_file gives a table of the 304 genome variants, and the metafile gives the metadata
+reference = genome_table@fix
+gt_file = genome_table@gt
+meta_file = genome_table@meta
+
+```
+
+
+The following gives the genetic IDs of the 304 samples, and shows ow to access individual genomes.
+```{r}
+table1 = gt_file[,2] #access a single genome, pick numbers between 2 and 305
+key_names = gt_file[0,] # access the names of the file as a matrix
+attr(gt_file,"dimnames") # access the names of files as a list of character strings
+PI_tables=gt_file[,startsWith(colnames(gt_file),"PI")] # creates a table of genomes whose IDs begin with PI
+
+
+```
+
+Let's now establish a distance function.  We want to see how genomic distance correlates with different phenomic traits.  Start with with Hamming Distance: 
+
+```{r}
+hamming <- function(x,y) {
+  if(length(x)!=length(y)){
+    print('error, vectors not same size!')
+  }else{
+    result <- length(x[x!=y])
+    
+    return(result)
+  }
+}
+
+hamming_mag <- function(x) {
+  result <- length(x[x!="0|0"])
+  return(result)
+}
+```
+
+Let's also get a vector of distances to the reference.  We can then plot the distances.  Immediately we see that the source of the samples has an effect on the distance from the reference:
+```{r}
+
+distances <- vector()
+for (i in 2:305){
+  distances[i-1] <-hamming_mag(gt_file[,i])
+}
+hist(distances,breaks = 20)
+plot(1:304,distances)
+hamming_mag(gt_file[,2])
+
+
+order(distances)
+length(gt_file[,1])
+
+```
+
+Now Let's do something a bit more involved.  We know that 00 differs from 01 in a way distinct from 11, so let's record that. We can use, in particular, what is called the manhatan or cityblock distance.  So |00-01|=|00-10|=|11-10|=|11-01|= 1, and |00-11|=|01-10|=2. But first, we must transform the genomic data into numeric form:
+
+```{r}
+
+#turns genomes into vectors with entries 0,1,2, where '0|0'-> 0; '0|1','1|0' ->1; '1|1'-> 2. 
+tonumericform <- function(a){
+  if (class(a)=="numeric") {
+    b<-matrix(nrow = length(gt_file[,1]),ncol=2)
+    b[,]   <-0       
+    return(b)
+    }
+  else{
+    vec<-matrix(nrow = length(a),ncol=2)
+    vec[,1]<-as.numeric(substr(a, 1,1))
+    vec[,2]<-as.numeric(substr(a, 3,3))
+  return(vec)
+  } 
+}
+```
+
+Now we define explicitly the cityblock distance.  The cityblock distance should be at least the size of the hamming distance:
+
+```{r}
+#cityblock distance: to get a cityblock magnitude, set a2 to '0|0'.  This is similar to the l_1 distance of a vector
+cityblock<- function(a1,a2){
+
+  vec1<-tonumericform(a1)
+  vec2<-tonumericform(a2)
+  dif<- length(vec1[vec1[,1]!=vec2[,1],1])+length(vec1[vec1[,2]!=vec2[,2],1])
+  return(dif)
+}
+print(hamming(gt_file[,2],gt_file[,3]))
+print(cityblock(gt_file[,2],gt_file[,3]))
+
+```
+
+We can similarly define Euclidean distance, which is in this case the 2-norm of the matrix formed by the genomic "difference":
+
+```{r}
+
+#Euclidean distance: to get a Euclidean Magnitude, set a2 to '0|0''
+euclidean<- function(a1,a2){
+  vec1<-tonumericform(a1)
+  vec2<-tonumericform(a2)
+  dif <- norm(vec1-vec2,"2")
+}
+
+c<-print(euclidean(gt_file[,2],gt_file[,3]))
+
+```
+
+Let's now chart the cityblock and Euclidean distances.   It turns out that in general, the distances from the reference are comparable to eeach other.
+
+```{r}
+
+city_distances <- vector()
+for (i in 2:305){
+  city_distances[i-1] <-cityblock(gt_file[,i],0)
+  i
+}
+
+euclid_distances <- vector()
+for (i in 2:305){
+  euclid_distances[i-1] <-euclidean(gt_file[,i],0)
+  i
+}
+
+hist(city_distances,breaks = 25)
+plot(1:304,city_distances)
+hist(euclid_distances)
+plot(1:304,euclid_distances)
+```
+
+Without refering to the traits data, we can simply look at the clusters that are formed from each of the metrics:
+
+The following creates a distance table for hamming, cityblock, and euclidean distances for all 304 samples (keep in mind that the latter two take longer):
+
+```{r}
+hd_matrix <- matrix(,nrow=304,ncol=304)
+for(i in 1:304){
+  for(j in i:304){
+    hd_matrix[i,j] <- hamming(gt_file[,i+1],gt_file[,j+1])
+    hd_matrix[j,i] <- hd_matrix[i,j]
+  }
+  if (i%%20 == 0) print(i)
+}
+
+cd_matrix <- matrix(,nrow=304,ncol=304)
+for(i in 1:304){
+  for(j in i:304){
+    cd_matrix[i,j] <- cityblock(gt_file[,i+1],gt_file[,j+1])
+    cd_matrix[j,i] <- cd_matrix[i,j]
+  }
+  if (i%%20 == 0) print(i)
+}
+
+ed_matrix <- matrix(,nrow=304,ncol=304)
+for(i in 1:304){
+  for(j in i:304){
+    ed_matrix[i,j] <- euclidean(gt_file[,i+1],gt_file[,j+1])
+    ed_matrix[j,i] <- ed_matrix[i,j]
+  }
+  if (i%%20 == 0) print(i)
+}
+```
+
+Let's now determine some clusters specific to each metric.  for this, we use the dendextend package, since it contains extra visual enhancements for dendrograms, which we use to viusalize the clusters.  The function in play for creating the clusters is hclust:
+
+```{r}
+
+#Cluster groups for the cityblock metric
+library(dendextend)
+
+#function for creating a dendrogram: matrix is the pairwise distance matrix, str_method is the method of clustering in string form, label_size is the size of the labels for the leaves in the dendrogram, num_clust is the number of colors used for highliting num_clust many clusters,label_list is the labels that you want for the dendrogram
+
+create_dendro <-function(matrix,str_method="manhattan",label_size=0.5,num_clust=8,label_list=NULL){
+  tree<- hclust(dist(matrix,method = str_method)) %>% 
+  as.dendrogram() %>%  #sets the cluregin as a dendrogram so that we can customize it and plot it.
+  set("labels_cex", label_size) %>%
+  set("labels_col",values = 1:num_clust,k=num_clust) %>%
+  set("branches_k_col", values = 1:num_clust, k = num_clust)
+  
+  labels(tree)<- label_list[order.dendrogram(tree)]
+  
+  return(tree)
+}
+
+#creates a clustering with set labels, label coloring, k= number of clusters, here set to 8, and label names set to size 0.5
+
+ct_tree1 <-create_dendro(cd_matrix,"manhattan",0.5,8,colnames(gt_file))
+
+
+  plot(ct_tree1,main='Genomic clusters: Cityblock distance') 
+
+```
+
+We do the same with the hamming and euclidean distances...
+```{r}
+
+ct_tree2 <-create_dendro(hd_matrix, label_list = colnames(gt_file))
+
+
+  plot(ct_tree2,main='Genomic clusters: Hamming distance') 
+
+```
+And finally, we work with the euclidean distance:
+
+```{r}
+ct_tree3 <-create_dendro(ed_matrix,str_method="euclidian",label_list = colnames(gt_file))
+
+
+  plot(ct_tree1,main='Genomic clusters: Euclidean distance') 
+
+```
+How do these clusterings depend on the distance? We can get a sense of this by comparing trees against each other.  The following code creates and saves an image of two dendrograms, but with the first having labels colored according to their clusters, while the second has the same labels, but with the original colors of the first clustering.  This enables us to see to what extent the values changed.
+
+```{r}
+
+#Comparing cityblock with hamming: cityblock on left, hamming on right
+
+#sets colors for hamming labels to be the same as those in the cityblock for each geneticID
+  newcolors<-labels_col(ct_tree2)[]
+  for (i in 1:304){
+    newcolors[i]<-labels_col(ct_tree1)[which(labels(ct_tree1)==labels(ct_tree2)[i])]
+  }
+  
+  #ct_tree2 %<%set("labels_col",values= newcolors)
+  
+  labels_colors(ct_tree2)<- newcolors
+
+png("largeCLustersCityHamming.png",height = 2000,width = 2000)
+par(mfrow = c(1,2))
+plot(ct_tree1,main="Cityblock Clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree2,main ="Hamming Clusters",side=TRUE)
+dev.off()
+
+```
+We can do the same with Hamming vs Euclidean... Both examples show that while certain clusters are for the most part retained, there are differences in the clustering itself.  This is important to keep in mind when trying to find correspondences between genetic distances and phenomic traits.
+```{r}
+
+#Comparing cityblock with hamming: cityblock on left, hamming on right
+
+#sets colors for hamming labels to be the same as those in the cityblock for each geneticID
+  newcolors<-labels_col(ct_tree2)[]
+  for (i in 1:304){
+    newcolors[i]<-labels_col(ct_tree3)[which(labels(ct_tree3)==labels(ct_tree2)[i])]
+  }
+  
+  #ct_tree2 %<%set("labels_col",values= newcolors)
+  
+  labels_colors(ct_tree2)<- newcolors
+
+png("largeCLustersEuclidHamming.png",height = 2000,width = 2000)
+par(mfrow = c(1,2))
+plot(ct_tree3,main="Euclidean Clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree2,main ="Hamming Clusters",side=TRUE)
+dev.off()
+
+```
+It turns out that we did not have phenomic data for each sample in the vcf file, but we had some phenomic information on some of the samples.  In order to get some genomic data, we need to focus on the samples that have more data in a different source.  For this we used gensys.
+
+Now we extract the genomes present in both the vcf file and the genesys data.
+```{r}
+# extract the genetic ID names from the gt file
+colnames(gt_file)<-gsub(".MERGE", "",colnames(gt_file))
+
+#sort genesys nutrion data
+genesys_data_sorted1 <- genesys_data1[order(genesys_data1$acceNumb),]
+
+
+#find IDS present in both the vcf files and the nutrition traits file, done twoce but with different syntax to check that files were matched.
+
+match_vcf1<-colnames(gt_file) %in% genesys_data_sorted1$acceNumb
+colnames(gt_file)[match_vcf1]
+
+
+#sort the files
+
+match_genesys1<- genesys_data_sorted1$acceNumb  %in% colnames(gt_file)
+genesys_data_sorted1[match_genesys1,]$acceNumb
+
+genesys_data_match1 <- genesys_data_sorted1[match_genesys1,]
+vcf_gt_match1 <- gt_file[,match_vcf1]
+
+
+```
+
+Thre are 48 matches in the data.  Let us now look at the clusters that are formed from each of the metrics:
+
+```{r}
+#Makes city block pairwise distance matrix
+cd_matrix48 <- matrix(,nrow = 48,ncol=48)
+for(i in 1:48){
+  for(j in i:48){
+    cd_matrix48[i,j] <- cityblock(vcf_gt_match1[,i],vcf_gt_match1[,j])
+    cd_matrix48[j,i] <-cd_matrix48[i,j]
+  }
+}
+
+#makes hamming distance matrix
+hd_matrix48 <- matrix(,nrow = 48,ncol=48)
+for(i in 1:48){
+  for(j in i:48){
+    hd_matrix48[i,j] <- hamming(vcf_gt_match1[,i],vcf_gt_match1[,j])
+    hd_matrix48[j,i] <-hd_matrix48[i,j]
+  }
+}
+
+#makes euclidean distance matrix
+ed_matrix48 <- matrix(,nrow = 48,ncol=48)
+for(i in 1:48){
+  for(j in i:48){
+    ed_matrix48[i,j] <- euclidean(vcf_gt_match1[,i],vcf_gt_match1[,j])
+    ed_matrix48[j,i] <-ed_matrix48[i,j]
+  }
+}
+
+ct_tree48_1 <-create_dendro(hd_matrix48, num_clust = 5,label_list = colnames(vcf_gt_match1))
+ct_tree48_2 <-create_dendro(cd_matrix48, num_clust = 5,label_list = colnames(vcf_gt_match1))
+ct_tree48_3 <-create_dendro(ed_matrix48, num_clust = 5,label_list = colnames(vcf_gt_match1))
+
+  plot(ct_tree48_1,main='48 trait genomic clusters: hamming distance') 
+  plot(ct_tree48_2,main='48 trait genomic clusters: cityblock distance') 
+  plot(ct_tree48_3,main='48 trait genomic clusters: euclidean distance') 
+
+
+```
+
+Comparing hamming and cityblock distance clusterings
+```{r}
+
+#change colors of cityblock distance labels to match hamming labels
+  oldcolors<- labels_col(ct_tree48_2)[]
+  newcolors<-labels_col(ct_tree48_2)[]
+  for (i in 1:48){
+    newcolors[i]<-labels_col(ct_tree48_1)[which(labels(ct_tree48_1)==labels(ct_tree48_2)[i])]
+  }
+  newcolors
+  labels_colors(ct_tree48_2)<-newcolors
+
+par(mfrow=c(1,2))
+plot(ct_tree48_1, main="nutrition trait hamming clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree48_2,main="nutrition trait cityblock clusters",side=TRUE)
+
+png("dual48clustersHammingCityblock.png", width = 600)
+par(mfrow=c(1,2))
+plot(ct_tree48_1, main="48 trait hamming clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree48_2,main="48 trait cityblock clusters",side=TRUE)
+dev.off()
+
+#restore the original color of the labels for the cityblock dendrogram
+labels_colors(ct_tree48_2)<-oldcolors
+
+```
+
+
+Comparing cityblock and euclidean
+```{r}
+
+#change colors of euclidean distance labels to match cityblock labels
+  oldcolors<- labels_col(ct_tree48_3)[]
+  newcolors<-labels_col(ct_tree48_3)[]
+  for (i in 1:48){
+    newcolors[i]<-labels_col(ct_tree48_2)[which(labels(ct_tree48_2)==labels(ct_tree48_3)[i])]
+  }
+  newcolors
+  labels_colors(ct_tree48_3)<-newcolors
+
+par(mfrow=c(1,2))
+plot(ct_tree48_2, main="48 sample: cityblock clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree48_3,main="48 sample: euclidean clusters",side=TRUE)
+
+
+par(mfrow=c(1,2))
+png("dual48clustersCityEuclidean.png",width = 600)
+par(mfrow=c(1,2))
+plot(ct_tree48_2,main="48-trait cityblock clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree48_3,main="48-trait euclidean clusters",side=TRUE)
+dev.off()
+
+```
+
+Let's do the same now for some growth traits.  We first extract the growth data
+
+```{r}
+
+#First, go into the file containing the growth trait files: latter commands only worked on command line and not
+library(dplyr)
+files <- dir( pattern = '*.csv', full.names = FALSE) 
+
+accessions <- read.csv(files[6]) #remove file 6, since it does not contain any extra information
+files <- files[c(1:5,7:36)] 
+tables <- gsub(".csv", "", basename(files))
+
+```
+
+Now create a table containing all the growth traits
+```{r}
+
+#create a table containing all of the traits from each csv file: The commands only worked in the command line but not the notebook
+library(dplyr)
+for(i in seq_along(files)){
+  next_table <- read.csv(files[i])
+  next_table$datasetId <- NULL
+  colnames(next_table)[colnames(next_table) == 'value'] <- tables[i]
+  accessions <- left_join(accessions, next_table, by = 'genesysId')
+}
+
+
+genesys_data2 <- accessions %>%
+  mutate(acceNumb = gsub("PI ", "PI", acceNumb))
+
+#Then return to the home file
+```
+Extract the matching growth data genetic ids
+```{r}
+genesys_data_sorted2 <- genesys_data2[order(genesys_data2$acceNumb),]
+genesys_data_sorted2 <- genesys_data2[order(genesys_data2$acceNumb),]
+
+match_vcf2<-colnames(gt_file) %in% genesys_data_sorted2$acceNumb
+colnames(gt_file)[match_vcf2]
+
+
+
+match_genesys2<- genesys_data_sorted2$acceNumb  %in% colnames(gt_file)
+genesys_data_sorted2[match_genesys2,]$acceNumb
+
+genesys_data_match2 <- genesys_data_sorted2[match_genesys2,]
+vcf_gt_match2 <- gt_file[,match_vcf2]
+
+
+```
+
+
+
+manhattan 
+```{r}
+hd_matrix19 <- matrix(,nrow = 19,ncol=19)
+for(i in 1:19){
+  for(j in i:19){
+    hd_matrix19[i,j] <- hamming(vcf_gt_match2[,i],vcf_gt_match2[,j])
+    hd_matrix19[j,i] <-hd_matrix19[i,j]
+  }
+}
+
+cd_matrix19 <- matrix(,nrow = 19,ncol=19)
+for(i in 1:19){
+  for(j in i:19){
+    cd_matrix19[i,j] <- cityblock(vcf_gt_match2[,i],vcf_gt_match2[,j])
+    cd_matrix19[j,i] <-cd_matrix19[i,j]
+  }
+}
+
+ed_matrix19 <- matrix(,nrow = 19,ncol=19)
+for(i in 1:19){
+  for(j in i:19){
+    ed_matrix19[i,j] <- euclidean(vcf_gt_match2[,i],vcf_gt_match2[,j])
+    ed_matrix19[j,i] <-ed_matrix19[i,j]
+  }
+}
+
+ct_tree19_1 <-create_dendro(hd_matrix19, num_clust = 3,label_list = colnames(vcf_gt_match2))
+ct_tree19_2 <-create_dendro(cd_matrix19, num_clust = 3,label_list = colnames(vcf_gt_match2))
+ct_tree19_3 <-create_dendro(ed_matrix19, num_clust = 3,label_list = colnames(vcf_gt_match2))
+
+  plot(ct_tree19_1,main='19 trait genomic clusters: hamming distance') 
+  plot(ct_tree19_2,main='19 trait genomic clusters: cityblock distance') 
+  plot(ct_tree19_3,main='19 trait genomic clusters: euclidean distance') 
+
+```
+
+```{r}
+  
+#change colors of cityblock distance labels to match hamming labels
+  oldcolors<- labels_col(ct_tree19_2)[]
+  newcolors<-labels_col(ct_tree19_2)[]
+  for (i in 1:19){
+    newcolors[i]<-labels_col(ct_tree19_1)[which(labels(ct_tree19_1)==labels(ct_tree19_2)[i])]
+  }
+  newcolors
+  labels_colors(ct_tree19_2)<-newcolors
+
+par(mfrow=c(1,2))
+plot(ct_tree19_1, main="growth trait hamming clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree19_2,main="growth trait cityblock clusters",side=TRUE)
+
+png("dual19clustersHammingCityblock.png", width = 600)
+par(mfrow=c(1,2))
+plot(ct_tree19_1, main="19 trait hamming clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree19_2,main="19 trait cityblock clusters",side=TRUE)
+dev.off()
+
+#restore the original color of the labels for the cityblock dendrogram
+labels_colors(ct_tree19_2)<-oldcolors
+
+```
+
+euclidean
+```{r}
+
+#change colors of euclidean distance labels to match hamming labels
+  oldcolors<- labels_col(ct_tree19_3)[]
+  newcolors<-labels_col(ct_tree19_3)[]
+  for (i in 1:19){
+    newcolors[i]<-labels_col(ct_tree19_1)[which(labels(ct_tree19_1)==labels(ct_tree19_3)[i])]
+  }
+  newcolors
+  labels_colors(ct_tree19_3)<-newcolors
+
+par(mfrow=c(1,2))
+plot(ct_tree19_1, main="growth trait hamming clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree19_3,main="growth trait euclidean clusters",side=TRUE)
+
+png("dual19clustersHammingEuclidean.png", width = 600)
+par(mfrow=c(1,2))
+plot(ct_tree19_1, main="19 trait hamming clusters",horiz=TRUE)
+plot_horiz.dendrogram(ct_tree19_3,main="19 trait euclidean clusters",side=TRUE)
+dev.off()
+
+#restore the original color of the labels for the cityblock dendrogram
+labels_colors(ct_tree19_3)<-oldcolors
+
+```
+
