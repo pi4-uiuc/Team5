@@ -1,0 +1,210 @@
+---
+title: "Heatmaps and Correlations"
+author: "Sarka"
+date: "6/11/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## **Data**
+
+### Genotype file - VCF (from Terraref)
+
+imp_TERRA_RIL_SNP.vcf file consists of three regions:
+
+-  **meta**: info about the file and its creation
+-  **fix**: reference table
+    - REF:	the reference allele expressed as a sequence of one or more A/C/G/T nucleotides (e.g. "A" or "AAC")
+    - ALT:	the alternate allele expressed as a sequence of one or more A/C/G/T nucleotides (e.g. "A" or "AAC"). If there is more than one alternate alleles, the field should be a comma-separated list of alternate alleles.
+
+|location|  reference  | alternate  | 
+|---|---|---|
+|  4370  |  G  |  A |  
+| 7330  | T  |  A |  
+
+-  **gt**: genotype region contains information about each variant for each sample
+
+|location|  culivar1  | cultivar2  | cultivar3 |
+|---|---|---|---|
+|  4370  |  0 $\|$ 0 | 1 $\|$ 0 | 1 $\|$ 1 |
+| 7330  | 0 $\|$ 0 | 0 $\|$ 1 | 0 $\|$ 0 |
+
+
+**Interpretation:**
+
+|location|  culivar1  | cultivar2  | cultivar3 |
+|---|---|---|---|
+|  4370  |  G $\|$ G | A $\|$ G | A $\|$ A |
+| 7330  | T $\|$ T | T $\|$ A | T $\|$ T |
+
+### Phenotype files - CSV (Genesys)
+
+#### Two types of data:
+
+- nutrition: Fat, Fiber, Mtblzble_Enrgy, NetEnGain, NetEnLact, NetEnMaint, Phosphorus, Protein, Starch, TotalNutrients
+- growth: kercolor, kercover, kershape, paniclelgt, plantcol, planthgt, rust, seedtype,...
+
+#### Combining files
+
+- 304 cultivars in genotype data
+- thousands of cultivars in phenotype nutrition and growth data 
+- only 48 cultivars with both genotype and phenotype nutrition data
+- only 19 cultivars with both genotype and phenotype growth data
+
+### Extracting genesys data 
+
+```{r, message=F, warning=F}
+files <- dir("~/data/genesys_nutrition/ ", pattern = '.csv', full.names = TRUE)
+accessions <- read.csv(files[2])
+files <- files[c(1,3:12)]
+tables <- gsub(".csv", "", basename(files))
+
+library(dplyr)
+for(i in seq_along(files)){
+  next_table <- read.csv(files[i])
+  next_table$datasetId <- NULL
+  colnames(next_table)[colnames(next_table) == 'value'] <- tables[i]
+  
+  accessions <- merge(accessions, next_table, by = 'genesysId',all.accessions=TRUE)
+
+genesys_data <- accessions %>%
+  mutate(acceNumb = gsub("PI ", "PI", acceNumb))
+```
+
+#### Sort genesys_data by the PIs
+```{r}
+genesys_data_sorted <- genesys_data[order(genesys_data$acceNumb),]
+```
+
+### Extracting vcf data 
+```{r, message=F, warning=F, results="hide"}
+if (!require('vcfR')) install.packages('vcfR')
+library(vcfR)
+vcf_data <- read.vcfR(file="/data/terraref/sites/genomics/derived_data/ril/gbs/imp_TERRA_RIL_SNP.vcf")
+
+vcf_gt = vcf_data@gt
+
+colnames(vcf_gt)<-gsub(".MERGE", "",colnames(vcf_gt))
+```
+
+###  Find matching cultivar IDs
+```{r}
+match_vcf<-colnames(vcf_gt) %in% genesys_data_sorted$acceNumb
+colnames(vcf_gt)[match_vcf]
+
+match_genesys<- genesys_data_sorted$acceNumb  %in% colnames(vcf_gt)
+genesys_data_sorted[match_genesys,]$acceNumb
+```
+
+#### Extract matches from genesys
+```{r}
+genesys_data_match <- genesys_data_sorted[match_genesys,]
+```
+
+#### Extract matches from vcf
+```{r}
+vcf_gt_match <- vcf_gt[,match_vcf]
+```
+
+## **Methods**
+
+- measuring distance: three kinds of distance: for two genomes $g_1,g_2$:
+  - $|\{i: g_1[i]\neq g_2[i] \}|$
+  - $\sum |g_1[i]-g_2[i]|$
+  - Euclidean distance
+- clustering: We used the hclust function and the dendexpend package to graphically illustrate the clusters
+
+- heatmaps: a table of colors which illustrates how values of traits correspond to genomic clusters and other traits
+  - used heatmap function
+- traits: found matches of two samples for different traits:
+  - 19 genomes with growth traits
+  - 48 genomes with nutrition traits
+  - some traits, such as plant color, are qualitative, so we quantified them according to a natural scale
+
+## **Results**
+
+### compute genetic distance
+
+The following is an allele distance table which will define allele differences
+```{r}
+names <-c('0|0','0|1','1|0','1|1')
+allele_dif_table <- matrix(c(0,1,1,2,1,0,0,1,1,0,0,1,2,1,1,0), nrow = 4,ncol = 4, dimnames = list(names, names))
+```
+
+### function turns strings '0|1'  into vectors c(0,1) etc.
+```{r}
+tonumericform <- function(a){
+  vec1<-matrix(nrow = length(a),ncol =2)
+  vec1[a=='0|0']<-c(0,0)
+  vec1[a=='1|1']<-c(1,1)
+  vec1[a=='0|1']<-c(0,1)
+  vec1[a == '1|0']<-c(1,0)
+  return(as.numeric(vec1)) 
+} 
+```
+
+### Distance 2: dist()
+```{r}
+cityblock<- function(a1,a2){
+  vec1<-tonumericform(a1)
+  vec2<-tonumericform(a2)
+  point_dif<-vec1-vec2
+  dif<- sum(abs(vec1-vec2))
+  return(dif)
+}
+```
+
+#### dist2 vector
+```{r}
+d_vector <- vector()
+for(i in 1:48){
+    d_vector[i] <- cityblock(vcf_gt_match[,i],rep('0|0',70693))
+}
+```
+
+#### dist2 matrix
+```{r}
+d_matrix <- matrix(,nrow = 48,ncol=48)
+for(i in 1:48){
+  for(j in 1:48){
+    d_matrix[i,j] <- cityblock(vcf_gt_match[,i],vcf_gt_match[,j])
+  }
+}
+heatmap(d_matrix, sym=TRUE)
+```
+
+#### tree hclus
+```{r,message=F, warning=F}
+if (!require('dendextend')) install.packages('dendextend'); library('dendextend')
+cl_tree <- hclust(as.dist(d_matrix))
+plot(cl_tree)
+clusters <- cutree(cl_tree, k = 4)
+```
+
+### add d_vector to genesys_data_match as last column 
+```{r}
+genesys_data_match[,17] <- d_vector
+```
+#### Plot heatmap
+```{r}
+genesys_matrix <- data.matrix(genesys_data_match[,6:16], rownames.force = NA)
+rownames(genesys_matrix) <- genesys_data_match[,'V17']
+heatmap(scale(genesys_matrix),Rowv=as.dendrogram(cl_tree))
+```
+
+### Correlations:
+```{r}
+#plot(genesys_data_match[,'V17'], genesys_data_match[,7  ])
+#png(file="correletions_48_colors.png",width=2500,height = 1300)
+par(mfrow = c(3, 4))  # 3 rows and 4 columns
+for (i in c(1:11)) {
+    plot(genesys_data_match[,'V17'], genesys_data_match[,i+5  ],
+    xlab="dist from reference", ylab=colnames(genesys_data_match)[i+5],
+    cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
+    col=clusters,pch=20,cex=2)}
+#dev.off()
+  ```
+
